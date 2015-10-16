@@ -56,11 +56,11 @@ main(int argc, char **argv)
     sleep(1);
 
     for(;;){
-		std::cout << "get distance" << std::endl;
-		double distance = sonar->getDistance(CM);
-		std::cout << "distance " << distance << std::endl;
-		sleep(5);
-	}
+        std::cout << "get distance" << std::endl;
+        double distance = sonar->getDistance(CM);
+        std::cout << "distance " << distance << std::endl;
+        sleep(5);
+    }
 
     delete sonar;
 

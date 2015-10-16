@@ -25,25 +25,26 @@
 
 #include <string>
 #include <mraa.h>
+#include <mraa/types.hpp>
 
 namespace upm
 {
 /**
  * @brief I2C LCD Display library
  * @defgroup i2clcd libupm-i2clcd
- * @ingroup seeed sparkfun adafruit i2c display gsk
+ * @ingroup seeed sparkfun adafruit i2c gpio display gsk
  */
 class LCD
 {
   public:
     LCD();
     virtual ~LCD();
-    mraa_result_t write(int x, int y, std::string msg);
+    mraa::Result write(int x, int y, std::string msg);
 
-    virtual mraa_result_t write(std::string msg) = 0;
-    virtual mraa_result_t setCursor(int row, int column) = 0;
-    virtual mraa_result_t clear() = 0;
-    virtual mraa_result_t home() = 0;
+    virtual mraa::Result write(std::string msg) = 0;
+    virtual mraa::Result setCursor(int row, int column) = 0;
+    virtual mraa::Result clear() = 0;
+    virtual mraa::Result home() = 0;
 
     std::string name();
 

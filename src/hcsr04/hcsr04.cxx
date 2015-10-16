@@ -1,6 +1,7 @@
 /*
  * Author: Yevgeniy Kiveisha <yevgeniy.kiveisha@intel.com>
- * Copyright (c) 2014 Intel Corporation.
+ * Author: Rafael Neri <rafael.neri@gmail.com>
+ * Copyright (c) 2014-2015 Intel Corporation.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -23,6 +24,8 @@
  */
 
 #include <iostream>
+#include <string>
+#include <stdexcept>
 #include <unistd.h>
 #include <stdlib.h>
 #include <functional>
@@ -31,29 +34,36 @@
 
 using namespace upm;
 
+#ifdef JAVACALLBACK
+HCSR04::HCSR04 (uint8_t triggerPin, uint8_t echoPin, IsrCallback *cb)
+{
+        HCSR04 (triggerPin, echoPin, generic_callback_isr);
+}
+#endif
+
 HCSR04::HCSR04 (uint8_t triggerPin, uint8_t echoPin, void (*fptr)(void *)) {
     mraa_result_t error  = MRAA_SUCCESS;
     m_name              = "HCSR04";
 
-    mraa_init();
-
     m_triggerPinCtx     = mraa_gpio_init (triggerPin);
-	if (m_triggerPinCtx == NULL) {
-		fprintf (stderr, "Are you sure that pin%d you requested is valid on your platform?", triggerPin);
-		exit (1);
-	}
+    if (m_triggerPinCtx == NULL) {
+        throw std::invalid_argument(std::string(__FUNCTION__) +
+                                    ": mraa_pwm_init() failed, invalid pin?");
+        return;
+    }
 
-	mraa_gpio_dir(m_triggerPinCtx, MRAA_GPIO_OUT);
-	mraa_gpio_write (m_triggerPinCtx, 0);
+    mraa_gpio_dir(m_triggerPinCtx, MRAA_GPIO_OUT);
+    mraa_gpio_write (m_triggerPinCtx, 0);
 
-	m_echoPinCtx = mraa_gpio_init(echoPin);
-	if (m_echoPinCtx == NULL) {
-		fprintf (stderr, "Are you sure that pin%d you requested is valid on your platform?", echoPin);
-		exit (1);
-	}
+    m_echoPinCtx = mraa_gpio_init(echoPin);
+    if (m_echoPinCtx == NULL) {
+        throw std::invalid_argument(std::string(__FUNCTION__) +
+                                    ": mraa_gpio_init() failed, invalid pin?");
+        return;
+    }
 
-	mraa_gpio_dir(m_echoPinCtx, MRAA_GPIO_IN);
-	mraa_gpio_isr(m_echoPinCtx, MRAA_GPIO_EDGE_BOTH, fptr, NULL);
+    mraa_gpio_dir(m_echoPinCtx, MRAA_GPIO_IN);
+    mraa_gpio_isr(m_echoPinCtx, MRAA_GPIO_EDGE_BOTH, fptr, NULL);
 }
 
 HCSR04::~HCSR04 () {
@@ -65,21 +75,21 @@ HCSR04::~HCSR04 () {
     }
 
     error = mraa_gpio_close (m_echoPinCtx);
-	if (error != MRAA_SUCCESS) {
-		mraa_result_print (error);
-	}
+    if (error != MRAA_SUCCESS) {
+        mraa_result_print (error);
+    }
 }
 
 double
 HCSR04::timing() {
-	mraa_gpio_write (m_triggerPinCtx, 1);
-	usleep(10);
-	mraa_gpio_write (m_triggerPinCtx, 0);
+    mraa_gpio_write (m_triggerPinCtx, 1);
+    usleep(10);
+    mraa_gpio_write (m_triggerPinCtx, 0);
 
     m_doWork = 0;
     m_InterruptCounter = 0;
     while (!m_doWork) {
-    	usleep (5);
+        usleep (5);
     }
 
     return m_FallingTimeStamp - m_RisingTimeStamp;
@@ -102,11 +112,11 @@ HCSR04::ackEdgeDetected () {
 double
 HCSR04::getDistance(int sys)
 {
-	double _timing = timing();
-	if (sys)
-	{
-		return (_timing/2) / 29.1;
-	} else {
-		return (_timing/2) / 74.1;
-	}
+    double _timing = timing();
+    if (sys)
+    {
+        return (_timing/2) / 29.1;
+    } else {
+        return (_timing/2) / 74.1;
+    }
 }

@@ -1,6 +1,7 @@
- /*
+/*
  * Author: Yevgeniy Kiveisha <yevgeniy.kiveisha@intel.com>
- * Copyright (c) 2014 Intel Corporation.
+ * Author: Rafael Neri <rafael.neri@gmail.com>
+ * Copyright (c) 2014-2015 Intel Corporation.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -29,6 +30,10 @@
 #include <mraa/pwm.h>
 #include <sys/time.h>
 
+#if defined(SWIGJAVA) || defined(JAVACALLBACK)
+#include "../IsrCallback.h"
+#endif
+
 #define CM 1
 #define INC 0
 
@@ -49,7 +54,7 @@ namespace upm {
  *
  * @brief API for the HC-SR04 Ultrasonic Sensor
  *
- * This file defines the HC-SR04 interface for libhcsr04
+ * This module defines the HC-SR04 interface for libhcsr04
  *
  * @snippet hcsr04.cxx Interesting
  */
@@ -63,8 +68,11 @@ class HCSR04 {
          * @param fptr Function pointer to handle rising-edge and
          * falling-edge interrupts
          */
+#if defined(SWIGJAVA) || defined(JAVACALLBACK)
+        HCSR04 (uint8_t triggerPin, uint8_t echoPin, IsrCallback *cb);
+#else
         HCSR04 (uint8_t triggerPin, uint8_t echoPin, void (*fptr)(void *));
-
+#endif
         /**
          * HCSR04 object destructor
          */
@@ -93,9 +101,12 @@ class HCSR04 {
         }
 
     private:
+#if defined(SWIGJAVA) || defined(JAVACALLBACK)
+        HCSR04 (uint8_t triggerPin, uint8_t echoPin, void (*fptr)(void *));
+#endif
         double timing();
-        mraa_gpio_context     m_triggerPinCtx;
-        mraa_gpio_context    m_echoPinCtx;
+        mraa_gpio_context   m_triggerPinCtx;
+        mraa_gpio_context   m_echoPinCtx;
 
         long    m_RisingTimeStamp;
         long    m_FallingTimeStamp;
